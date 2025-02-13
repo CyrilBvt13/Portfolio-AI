@@ -1,0 +1,14 @@
+app: >
+  Construit une api en python à l'aide de la bibliothèque Flask. L'api doit permettre la création, modification et connexion d'utilisateurs à une application en gérant également les sessions.
+  
+  Les informations utilisateurs seront :
+    - un identifiant
+    - un mot de passe
+    - un nom
+    - un prénom
+    
+  Les utilisateurs devront être stockés dans une base de donnée tinydb.
+
+  tu devras obligatoirement rendre l'api la plus sécurisée possible en implémentant toutes les règles de bonnes pratiques pour ce type d'api, notamment en controlant les input de l'utilisateur et en utilisant des token JWT pour la gestion des sessions utilisateurs.
+
+  Le code produit devra être sauvegardé dans autant de fichiers python que nécessaire.
