@@ -1,3 +1,0 @@
-Interface;Description;Solution
-DICOM;Mon fichier de dose ne s'ouvre dans ITO-DicomTools;Vérifiez qu'il s'agisse bien d'un fichier dicom (.dcm)
-DICOM;Je n'arrive pas a envoyer via TCP/IP mon fichier de dose;Vérifiez que l'adresse et le port utilisés sont bien accessibles depuis votre poste
