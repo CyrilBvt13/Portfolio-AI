@@ -1,0 +1,23 @@
+[project]
+name = "PythonDevelopmentTeam"
+version = "1.2.0"
+description = "A simple Python development team using crewAI"
+authors = [{ name = "Cyril BOUVART" }]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "crewai[tools]>=0.100.1,<1.0.0"
+]
+
+[project.scripts]
+api_dev_team = "api_dev_team.main:run"
+run_crew = "api_dev_team.main:run"
+train = "api_dev_team.main:train"
+replay = "api_dev_team.main:replay"
+test = "api_dev_team.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
