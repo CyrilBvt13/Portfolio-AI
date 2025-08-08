@@ -1,0 +1,150 @@
+Parfait ! La **structuration RAG (Retrieval-Augmented Generation)** te permettra d’ajouter une **mémoire contextuelle** à ton agent IA. Tu pourras ainsi :
+
+* Interroger toutes les réunions passées en langage naturel.
+* Générer de la documentation dynamique à partir de ton historique.
+* Créer un assistant Q\&A local sur ton corpus confidentiel.
+
+---
+
+## 🧠 Qu’est-ce qu’un RAG ?
+
+**RAG = récupération (R) + génération (G)**
+Il s'agit d’un système où un **LLM** génère des réponses à partir de **documents stockés et indexés** localement.
+
+---
+
+## 🎯 Objectif de cette étape
+
+> Permettre à ton agent IA de répondre à des questions comme :
+>
+> * “Quels points ont été abordés lors des réunions sur le projet X ?”
+> * “Quelles décisions ont été prises en juin ?”
+> * “Qui est responsable de la tâche sur le livrable Y ?”
+
+---
+
+## 🧱 Architecture RAG minimale (locale)
+
+```
+[ Documents de réunions (txt/md) ] ---> [ Vector Store (Chroma, FAISS) ] ---> 
+         ^                                                         |
+         |                                                         v
+  [ Indexation avec LangChain ]                            [ Récupération des passages ]
+                                                                 |
+                                                                 v
+                                            [ LLM (SmolLM3) génère réponse finale ]
+```
+
+---
+
+## 🛠️ Étapes concrètes pour mettre ça en place
+
+### **1. Installer les dépendances**
+
+```bash
+pip install langchain chromadb transformers
+```
+
+---
+
+### **2. Charger tes comptes-rendus dans LangChain**
+
+```python
+from langchain.document_loaders import TextLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.embeddings import HuggingFaceEmbeddings
+import os
+
+# 1. Chargement des fichiers
+documents = []
+dossier = "./compte_rendus"
+for fichier in os.listdir(dossier):
+    if fichier.endswith(".txt"):
+        loader = TextLoader(os.path.join(dossier, fichier), encoding="utf-8")
+        documents.extend(loader.load())
+
+# 2. Découpage des documents en chunks (si longs)
+splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+docs_chunked = splitter.split_documents(documents)
+
+# 3. Embedding + vectorisation locale
+embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+vectorstore = Chroma.from_documents(docs_chunked, embedding_model, persist_directory="db_meetings")
+```
+
+---
+
+### **3. Créer une chaîne de RAG**
+
+```python
+from langchain.chains import RetrievalQA
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+
+# Charger SmolLM3 localement
+model_id = "aixplain/SmolLM-3B-v0.1"
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto", torch_dtype="auto")
+llm_pipeline = pipeline("text-generation", model=model, tokenizer=tokenizer)
+
+# Créer la chaîne RAG
+retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+rag_chain = RetrievalQA.from_chain_type(
+    llm=llm_pipeline,
+    chain_type="stuff",
+    retriever=retriever,
+    return_source_documents=True
+)
+```
+
+---
+
+### **4. Interroger ton assistant IA localement**
+
+```python
+question = "Quelles décisions ont été prises en juillet ?"
+result = rag_chain({"query": question})
+
+print("📄 Réponse générée :")
+print(result["result"])
+
+# (Optionnel) Voir les documents sources :
+for doc in result["source_documents"]:
+    print(f"🔹 Source: {doc.metadata.get('source')}")
+```
+
+---
+
+## ✅ Résultat
+
+Tu as maintenant une **IA locale avec mémoire**, capable de répondre à toutes tes questions en langage naturel à partir de tes propres fichiers texte confidentiels.
+
+---
+
+## 🔒 Tout reste local
+
+* Embedding avec SentenceTransformers local
+* Indexation vectorielle avec ChromaDB (ou FAISS si tu préfères)
+* Génération avec SmolLM3 (Hugging Face)
+* Aucune API externe
+
+---
+
+## 🎁 Étapes suivantes possibles
+
+| Fonction                     | Outils                                |
+| ---------------------------- | ------------------------------------- |
+| Interface Q\&A               | Gradio / Streamlit                    |
+| Support PDF                  | `PyMuPDF` ou `pdfplumber` + LangChain |
+| Historique des requêtes      | Logging CSV ou MongoDB local          |
+| Ajout de méta (projet, date) | `Document.metadata` dans LangChain    |
+
+---
+
+Souhaites-tu que je te :
+
+* Fournisse un template Python complet pour cette chaîne RAG ?
+* Ajoute une interface utilisateur Gradio ?
+* Convertisse cette RAG en microservice local Dockerisé ?
+
+Je peux aussi t'aider à ajouter l'accès à d'autres formats comme Markdown ou PDF.
